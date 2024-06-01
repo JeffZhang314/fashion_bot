@@ -32,29 +32,40 @@ class runModel():
     def train(self, train, val, criterion=nn.MSELoss(), epochs=512):#TBDDDD
         
         
+        #scuffed and not done 
         for epoch in range(epochs):  # loop over whole dataset
             total_train_loss = 0.0
             
-            
-
-        n_warmup_steps = 20
-
         
+            n_warmup_steps = 20
 
-        scheduler1 = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda = lambda epoch: 512 ** -0.5 * n_warmup_steps ** -1.5 * epoch)
-        scheduler2 = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda = lambda epoch: 512 ** -0.5 * (epoch + n_warmup_steps) ** -0.5)
+            scheduler1 = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda = lambda epoch: 512 ** -0.5 * n_warmup_steps ** -1.5 * epoch)
+            scheduler2 = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda = lambda epoch: 512 ** -0.5 * (epoch + n_warmup_steps) ** -0.5)
 
-        scheduler = optim.lr_scheduler.SequentialLR(optimizer, schedulers = [scheduler1, scheduler2], milestones = [n_warmup_steps])
+            scheduler = optim.lr_scheduler.SequentialLR(optimizer, schedulers = [scheduler1, scheduler2], milestones = [n_warmup_steps])
 
-        for i in range(n_warmup_steps * 21):
-            y_pred = model(valid_batch, valid_outfit_boundaries)
-            loss = loss_fn(y_pred, valid_labels)
-            print(i)
-            print(loss)
-            print(scheduler.get_last_lr())
-            # backward pass
-            optimizer.zero_grad()
-            loss.backward()
-            # update weights
-            optimizer.step()
-            scheduler.step()
+            for i in range(n_warmup_steps * 21):
+                y_pred = model(valid_batch, valid_outfit_boundaries)
+                loss = loss_fn(y_pred, valid_labels)
+                print(i)
+                print(loss)
+                print(scheduler.get_last_lr())
+                # backward pass
+                optimizer.zero_grad()
+                loss.backward()
+                # update weights
+                optimizer.step()
+                scheduler.step()
+            
+    def test(self, test):
+        pass
+    
+    def get_train_loss(self):
+        return self.train_loss
+    
+    def get_val_loss(self):
+        return self.val_loss
+    
+    def get_train_acc(self):
+        #train_acc = curr_acc = correct / total
+        return self.train_acc    

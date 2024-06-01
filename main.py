@@ -13,6 +13,7 @@ import numpy as np
 import random
 import torch.optim as optim
 import math
+from model import Fasho
 
 def main():
   
@@ -32,25 +33,33 @@ def main():
   cum_len = 0
   torch.manual_seed(0)
   batch_size = 64
-
+  
+  optimizer = optim.Adam(model.parameters(), lr = n_warmup_steps ** -0.5, betas = (0.9, 0.98), eps = 1e-09)
+  mask = torch.empty(0, 9)
+  
   #data preparation
   myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
   annotated_batch, outfit_boundaries, likes, views = myData.prep_data()
-  
+  #this runs through the resnet layer and prepares the data 
 
-  optimizer = optim.Adam(model.parameters(), lr = n_warmup_steps ** -0.5, betas = (0.9, 0.98), eps = 1e-09)
+
 
   print(annotated_batch)
-
-  torch.save(annotated_batch, prefix + 'tensor.pt')
+  torch.save(annotated_batch, path + 'tensor.pt')
   print("done")
 
   loaded_batch, loaded_outfit_boundaries, loaded_likes, loaded_views = torch.load(path + 'tensor.pt')
-  #this runs through the resnet layer, 
+  
+  if torch.cuda.is_available():
+    outfit_boundaries = outfit_boundaries.cuda()
+    mask = mask.cuda()
+    
 
   #main model ResnetToTransformer Layer -> Transformer Layer -> TransformerToOutput Layer
-  model = Model()
-  run_model = runModel(model, optimizer, args)
+  model = Fasho(outfit_boundaries, mask)
+  run_model = runModel(Fasho, optimizer, args)
+  
+  
   
 
 

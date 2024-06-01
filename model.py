@@ -15,7 +15,7 @@ import torch.optim as optim
 import math
 
 
-class Model(nn.Module): # connects resnet and transformer
+class Fasho(nn.Module): # connects resnet and transformer
   def __init__(self, outfit_boundaries, mask):
     super(Model, self).__init__()
 
