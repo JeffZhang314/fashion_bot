@@ -16,9 +16,11 @@ import math
 
 
 class Model(nn.Module): # connects resnet and transformer
-  def __init__(self):
+  def __init__(self, outfit_boundaries, mask):
     super(Model, self).__init__()
 
+    self.outfit_boundaries = outfit_boundaries
+    self.mask = mask
     self.output_embedding_dict = nn.Embedding(1, 512)
     #Resnet to transformer layers
     self.lin0 = nn.Linear(2428, 4096)
@@ -73,7 +75,7 @@ class Model(nn.Module): # connects resnet and transformer
 
     self.skip3 = nn.Linear(512, 1)
 
-  def forward(self, x, outfit_boundaries, mask):
+  def forward(self, x):
 
     #resnet to transformer layer
     out = self.lin0(x)

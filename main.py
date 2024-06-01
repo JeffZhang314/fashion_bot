@@ -33,9 +33,12 @@ def main():
   torch.manual_seed(0)
   batch_size = 64
 
-  myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries):
+  #data preparation
+  myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
+  annotated_batch, outfit_boundaries, likes, views = myData.prep_data()
+  
 
-  annotated_batch = myData.prep_data()
+  optimizer = optim.Adam(model.parameters(), lr = n_warmup_steps ** -0.5, betas = (0.9, 0.98), eps = 1e-09)
 
   print(annotated_batch)
 
@@ -46,21 +49,8 @@ def main():
   #this runs through the resnet layer, 
 
   #main model ResnetToTransformer Layer -> Transformer Layer -> TransformerToOutput Layer
-  model = Model(resnet_to_transformer, output_embedding_dict, transformer, transformer_to_output)
+  model = Model()
+  run_model = runModel(model, optimizer, args)
+  
 
 
-
-
-    
-    for i in range(n_warmup_steps * 21):
-      y_pred = model(valid_batch, valid_outfit_boundaries)
-      loss = loss_fn(y_pred, valid_labels)
-      print(i)
-      print(loss)
-      print(scheduler.get_last_lr())
-      # backward pass
-      optimizer.zero_grad()
-      loss.backward()
-      # update weights
-      optimizer.step()
-      scheduler.step()

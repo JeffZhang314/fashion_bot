@@ -20,33 +20,34 @@ class data():
         self.outfit_boundaries = outfit_boundaries
     
     def prep_data(): # get resnet output and category id one-hot encoding of whole dataset
-
-        
-        # Load the pre-trained ResNet-152 model
-        
         
         # Freeze all the pre-trained layers
         for param in resnet.parameters():
             param.requires_grad = False
         resnet = torch.nn.Sequential(*(list(resnet.children())[:-1]))
 
+        batch = torch.tensor([])
+
+        for i in range(2):
+            inc_batch = prep_batch(data[batch_size * i:min(batch_size * (i + 1), len(data))])
+            batch = torch.cat((batch, inc_batch))
+            
+        return batch, outfit_boundaries, likes, views
+
+    def prep_batch(data): # get resnet output and category id one-hot encoding of just data
+
+        #nonlocal category_ids, preprocess, resnet, cum_len, batch_size, likes, views, outfit_boundaries
+        #should no longer need this
+
+        batch = torch.empty(0, 3, 224, 224)
+        categories = torch.empty(0, 380)
+        n_processed = 0
 
         f = open("valid_no_dup.json",)
         data = load(f)
         random.Random(0).shuffle(data)
         f.close()
-
         
-
-    def prep_batch(data): # get resnet output and category id one-hot encoding of just data
-
-        nonlocal category_ids, preprocess, resnet, cum_len, batch_size, likes, views, outfit_boundaries
-
-        batch = torch.empty(0, 3, 224, 224)
-        categories = torch.empty(0, 380)
-
-        n_processed = 0
-
         for i in data:
             print(n_processed)
             n_processed += 1
@@ -76,14 +77,10 @@ class data():
 
         return batch
 
-    batch = torch.tensor([])
-
-    for i in range(2):
-        inc_batch = prep_batch(data[batch_size * i:min(batch_size * (i + 1), len(data))])
-        batch = torch.cat((batch, inc_batch))
+    
 
     
     
-    return batch, outfit_boundaries, likes, views
+    
 
 
