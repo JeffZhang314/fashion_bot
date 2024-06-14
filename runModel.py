@@ -22,6 +22,10 @@ class runModel():
     """
     def __init__(self, model, optimizer, args) -> None:
         
+        if torch.cuda.is_available():
+            self.model = model.cuda()
+        else:
+            self.model = model
         self.model = model
         self.train_loss = []
         self.val_loss = []
@@ -44,13 +48,18 @@ class runModel():
 
             scheduler = optim.lr_scheduler.SequentialLR(optimizer, schedulers = [scheduler1, scheduler2], milestones = [n_warmup_steps])
 
+            if torch.cuda.is_available():
+                train = train.cuda()
+                val = val.cuda()
+            
+            
             for i in range(n_warmup_steps * 21):
-                y_pred = model(valid_batch, valid_outfit_boundaries)
-                loss = loss_fn(y_pred, valid_labels)
+                out = model(train)
+                loss = loss_fn(out, valid_labels)
+                #not sure the labels situation from original code
                 print(i)
                 print(loss)
                 print(scheduler.get_last_lr())
-                # backward pass
                 optimizer.zero_grad()
                 loss.backward()
                 # update weights

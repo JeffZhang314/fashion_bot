@@ -13,7 +13,9 @@ import numpy as np
 import random
 import torch.optim as optim
 import math
+
 from model import Fasho
+from runModel import runModel
 
 def main():
   
@@ -42,8 +44,6 @@ def main():
   annotated_batch, outfit_boundaries, likes, views = myData.prep_data()
   #this runs through the resnet layer and prepares the data 
 
-
-
   print(annotated_batch)
   torch.save(annotated_batch, path + 'tensor.pt')
   print("done")
@@ -58,6 +58,7 @@ def main():
   #main model ResnetToTransformer Layer -> Transformer Layer -> TransformerToOutput Layer
   model = Fasho(outfit_boundaries, mask)
   run_model = runModel(Fasho, optimizer, args)
+  run_model.train(annotated_batch, annotated_batch, criterion=nn.MSELoss(), epochs=512) #for now the validation and training datasets are the same
   
   
   

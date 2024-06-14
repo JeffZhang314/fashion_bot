@@ -77,7 +77,9 @@ class data():
 
         return batch
 
-    
+    def train_val_split():
+        #return a split of the data into training and validation sets
+        pass
 
     
     
