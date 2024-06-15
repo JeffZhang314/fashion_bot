@@ -1,23 +1,10 @@
 import torch.nn as nn
-from random import shuffle
-from json import load
-from PIL import Image
-import torchvision.models as models
 import torch
-from torch.nested import nested_tensor
-from torch.optim import AdamW
-import pandas as pd
-from matplotlib import pyplot as plt
-import PIL
-import numpy as np
-import random
-import torch.optim as optim
-import math
 
 
 class Fasho(nn.Module): # connects resnet and transformer
   def __init__(self, outfit_boundaries, mask):
-    super(Model, self).__init__()
+    super(Fasho, self).__init__()
 
     self.outfit_boundaries = outfit_boundaries
     self.mask = mask

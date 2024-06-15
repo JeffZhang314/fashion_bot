@@ -1,12 +1,12 @@
 import torch.nn as nn
-from random import shuffle
+import random
 from json import load
 from PIL import Image
-import torchvision.models as models
 import torch
+import torchvision.models as models
 
 
-class data():
+class Data():
     
     def __init__(self, path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries):
         self.path = path
@@ -18,23 +18,29 @@ class data():
         self.likes = likes
         self.views = views
         self.outfit_boundaries = outfit_boundaries
-    
-    def prep_data(): # get resnet output and category id one-hot encoding of whole dataset
-        
+
+    def prep_data(self): # get resnet output and category id one-hot encoding of whole dataset
+
         # Freeze all the pre-trained layers
-        for param in resnet.parameters():
+        for param in self.resnet.parameters():
             param.requires_grad = False
-        resnet = torch.nn.Sequential(*(list(resnet.children())[:-1]))
+        self.resnet = nn.Sequential(*(list(self.resnet.children())[:-1]))
 
         batch = torch.tensor([])
 
+        f = open("valid_no_dup.json",)
+        data = load(f)
+        random.Random(0).shuffle(data)
+        f.close()
+
         for i in range(2):
-            inc_batch = prep_batch(data[batch_size * i:min(batch_size * (i + 1), len(data))])
+            print(i)
+            inc_batch = self.prep_batch(data[self.batch_size * i:min(self.batch_size * (i + 1), len(data))])
             batch = torch.cat((batch, inc_batch))
             
-        return batch, outfit_boundaries, likes, views
+        return batch, self.outfit_boundaries, self.likes, self.views
 
-    def prep_batch(data): # get resnet output and category id one-hot encoding of just data
+    def prep_batch(self, data): # get resnet output and category id one-hot encoding of just data
 
         #nonlocal category_ids, preprocess, resnet, cum_len, batch_size, likes, views, outfit_boundaries
         #should no longer need this
@@ -42,42 +48,37 @@ class data():
         batch = torch.empty(0, 3, 224, 224)
         categories = torch.empty(0, 380)
         n_processed = 0
-
-        f = open("valid_no_dup.json",)
-        data = load(f)
-        random.Random(0).shuffle(data)
-        f.close()
         
         for i in data:
             print(n_processed)
             n_processed += 1
 
-            folder = path + i["set_id"] + "/"
-            likes = torch.cat((likes, torch.tensor([i["likes"]])))
-            views = torch.cat((views, torch.tensor([i["views"]])))
+            folder = self.path + i["set_id"] + "/"
+            self.likes = torch.cat((self.likes, torch.tensor([i["likes"]])))
+            self.views = torch.cat((self.views, torch.tensor([i["views"]])))
 
-            cum_len += len(i["items"])
-            outfit_boundaries = torch.cat((outfit_boundaries, torch.tensor([cum_len])))
+            self.cum_len += len(i["items"])
+            self.outfit_boundaries = torch.cat((self.outfit_boundaries, torch.tensor([self.cum_len])))
 
             j = 0
             while j < len(i["items"]):
                 img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
                 if (img.mode != "RGB"):
                     img = img.convert('RGB')
-                batch = torch.cat((batch, preprocess(img).unsqueeze(0)))
+                batch = torch.cat((batch, self.preprocess(img).unsqueeze(0)))
                 img.close()
-                one_hot = nn.functional.one_hot(torch.as_tensor(category_ids.index(i["items"][j]["categoryid"])), 380).unsqueeze(0)
+                one_hot = nn.functional.one_hot(torch.as_tensor(self.category_ids.index(i["items"][j]["categoryid"])), 380).unsqueeze(0)
                 categories = torch.cat((categories, one_hot))
                 j += 1
 
         print("before resnet")
-        batch = resnet(batch).squeeze()
+        batch = self.resnet(batch).squeeze()
         print("after resnet")
         batch = torch.cat((batch, categories), 1)
 
         return batch
 
-    def train_val_split():
+    def train_val_split(self):
         #return a split of the data into training and validation sets
         pass
 

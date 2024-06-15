@@ -1,21 +1,9 @@
 import torch.nn as nn
-from random import shuffle
-from json import load
-from PIL import Image
-import torchvision.models as models
 import torch
-from torch.nested import nested_tensor
-from torch.optim import AdamW
-import pandas as pd
-from matplotlib import pyplot as plt
-import PIL
-import numpy as np
-import random
 import torch.optim as optim
-import math
 
 
-class runModel():
+class RunModel():
     """
     Class that scafolds the training and evaluation methods and attributes
     for each test case (Test case: Adam, Test case: Lookahead(Adam)).
