@@ -4,6 +4,7 @@ from json import load
 from PIL import Image
 import torch
 import torchvision.models as models
+import math
 
 
 class Data():
@@ -28,12 +29,14 @@ class Data():
 
         batch = torch.tensor([])
 
-        f = open("valid_no_dup.json",)
+        f = open(self.path + "test_no_dup.json",)
         data = load(f)
-        random.Random(0).shuffle(data)
         f.close()
+        random.Random(0).shuffle(data)
 
-        for i in range(2):
+        print(len(data))
+
+        for i in range(math.ceil(len(data)/self.batch_size)):
             print(i)
             inc_batch = self.prep_batch(data[self.batch_size * i:min(self.batch_size * (i + 1), len(data))])
             batch = torch.cat((batch, inc_batch))
@@ -47,13 +50,10 @@ class Data():
 
         batch = torch.empty(0, 3, 224, 224)
         categories = torch.empty(0, 380)
-        n_processed = 0
         
         for i in data:
-            print(n_processed)
-            n_processed += 1
 
-            folder = self.path + i["set_id"] + "/"
+            folder = self.path + "images\\" + i["set_id"] + "\\"
             self.likes = torch.cat((self.likes, torch.tensor([i["likes"]])))
             self.views = torch.cat((self.views, torch.tensor([i["views"]])))
 
