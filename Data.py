@@ -29,7 +29,7 @@ class Data():
 
         batch = torch.tensor([])
 
-        f = open(self.path + "test_no_dup.json",)
+        f = open(self.path + "valid_no_dup.json",)
         data = load(f)
         f.close()
         random.Random(0).shuffle(data)

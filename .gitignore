@@ -1,2 +1,5 @@
 __pycache__/
 images/
+valid.pt
+test.pt
+train.pt
