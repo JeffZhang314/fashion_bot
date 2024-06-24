@@ -1,0 +1,74 @@
+
+First class is [1...] second class is [0,1....] etc
+Gender: Male, Female, Both/Unisex
+Formality: Casual, Formal
+Type: Top, Bottom
+
+Specific Type: 
+Casual
+Day Dresses
+Cocktail Dresses
+Gowns
+Skirts
+Mini Skirts
+Knee Length Skirts
+Long Skirts
+Tops
+Tunics
+Blouses
+Cardigans", "occasion": "Casual
+Sweaters
+T-Shirts
+Outerwear
+Coats
+Jackets
+Vests
+Jeans
+Pants
+Shorts
+Suits
+Swimwear
+Activewear
+Skinny Jeans
+Bootcut Jeans
+Wide Leg Jeans
+Boyfriend Jeans
+Leggings
+Jumpsuits
+Rompers
+Camisoles
+Chemises
+Pajamas
+Robes
+Tights
+Activewear Tops
+Activewear Pants
+Activewear Skirts
+Activewear Shorts
+Activewear Jackets
+Sports Bras
+Clothing
+Shirts
+Sweaters
+T-Shirts
+Outerwear
+Sportcoats & Blazers
+Jeans
+Pants
+Shorts
+Suits
+Swimwear
+Underwear
+Sleepwear
+Activewear
+Activewear Tops
+Activewear Pants
+Activewear Shorts
+Activewear Jackets
+Activewear Tank Tops
+Straight Leg Jeans
+Capri & Cropped Pants
+Wedding Dresses
+Bikinis
+One Piece Swimsuits
+Cover-up
