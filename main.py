@@ -41,6 +41,29 @@ def main():
   torch.save(annotated_batch, path + 'valid.pt')
 
   """
+  one_hot_gender = torch.eye(3)
+  one_hot_formality = torch.eye(2)
+  one_hot_type = torch.eye(2)
+  one_hot_specific_type = torch.eye(54)
+
+  # Determine the maximum shape
+  max_cols = max(one_hot_gender.shape[1], one_hot_formality.shape[1], one_hot_type.shape[1], one_hot_specific_type.shape[1])
+  print(max_cols)
+  # Pad tensors to match the maximum shape
+  def pad_tensor(tensor, max_cols):
+      padded_tensor = torch.zeros((tensor.shape[0], max_cols))
+      padded_tensor[:tensor.shape[0], :tensor.shape[1]] = tensor
+      return padded_tensor
+
+  padded_gender = pad_tensor(one_hot_gender, max_cols)
+  padded_formality = pad_tensor(one_hot_formality, max_cols)
+  padded_type = pad_tensor(one_hot_type, max_cols)
+  padded_specific_type = pad_tensor(one_hot_specific_type, max_cols)
+
+  one_hot = torch.cat((padded_formality, padded_gender, padded_type, padded_specific_type))
+
+# Concatenate the padded tensors  
+
   
   train_batch, train_outfit_boundaries, train_likes, train_views = torch.load(path + 'train.pt')
   valid_batch, valid_outfit_boundaries, valid_likes, valid_views = torch.load(path + 'valid.pt')

@@ -51,8 +51,10 @@ class Data():
         batch = torch.empty(0, 3, 224, 224)
         categories = torch.empty(0, 380)
         
+        
+        
         for i in data:
-
+            
             folder = self.path + "images\\" + i["set_id"] + "\\"
             self.likes = torch.cat((self.likes, torch.tensor([i["likes"]])))
             self.views = torch.cat((self.views, torch.tensor([i["views"]])))
@@ -62,13 +64,17 @@ class Data():
 
             j = 0
             while j < len(i["items"]):
-                img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
-                if (img.mode != "RGB"):
-                    img = img.convert('RGB')
-                batch = torch.cat((batch, self.preprocess(img).unsqueeze(0)))
-                img.close()
-                one_hot = nn.functional.one_hot(torch.as_tensor(self.category_ids.index(i["items"][j]["categoryid"])), 380).unsqueeze(0)
-                categories = torch.cat((categories, one_hot))
+                if (i["items"][j]["categoryid"] in self.category_ids):
+                    img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
+                    if (img.mode != "RGB"):
+                        img = img.convert('RGB')
+                    batch = torch.cat((batch, self.preprocess(img).unsqueeze(0)))
+                    img.close()
+                    
+                    
+                    one_hot = nn.functional.one_hot(torch.as_tensor(self.category_ids.index(i["items"][j]["categoryid"])), 380).unsqueeze(0)
+                    
+                    categories = torch.cat((categories, one_hot))
                 j += 1
 
         print("before resnet")
@@ -78,11 +84,7 @@ class Data():
 
         return batch
 
-    def train_val_split(self):
-        #return a split of the data into training and validation sets
-        pass
 
-    
     
     
 
