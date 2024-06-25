@@ -2,9 +2,10 @@ import torch.nn as nn
 import torchvision.models as models
 import torch
 import torch.optim as optim
+from transformer.Optim import ScheduledOptim
 
 from model import Fasho
-from runModel import RunModel
+from runModel import TrainModel
 from data import Data
 
 import os
@@ -27,8 +28,6 @@ def main():
   torch.manual_seed(0)
   batch_size = 128
   
-  #optimizer = optim.Adam(model.parameters(), lr = n_warmup_steps ** -0.5, betas = (0.9, 0.98), eps = 1e-09)
-  
   weights = models.ResNet152_Weights.IMAGENET1K_V2
   preprocess = weights.transforms()
   # Load the pre-trained ResNet-152 model
@@ -43,12 +42,8 @@ def main():
 
   """
   
-  loaded_batch, loaded_outfit_boundaries, loaded_likes, loaded_views = torch.load(path + 'valid.pt')
-
-  print(loaded_batch.shape)
-  print(loaded_outfit_boundaries.shape)
-  print(loaded_likes.shape)
-  print(loaded_views.shape)
+  train_batch, train_outfit_boundaries, train_likes, train_views = torch.load(path + 'train.pt')
+  valid_batch, valid_outfit_boundaries, valid_likes, valid_views = torch.load(path + 'valid.pt')
 
   
   
@@ -59,10 +54,12 @@ def main():
 
   #main model ResnetToTransformer Layer -> Transformer Layer -> TransformerToOutput Layer
   model = Fasho()
-  print(model(loaded_batch, loaded_outfit_boundaries).shape)
-  print("done")
-  #run_model = runModel(Fasho, optimizer, args)
-  #run_model.train(annotated_batch, annotated_batch, criterion=nn.MSELoss(), epochs=512) #for now the validation and training datasets are the same
+  adam_optim = optim.Adam(model.parameters(), betas = (0.9, 0.98), eps = 1e-09)
+  batch_size = 3800
+  train_size = 17316
+
+  run_model = runModel(Fasho, adam_optim, batch_size, train_size)
+  run_model.train(annotated_batch, annotated_batch, criterion=nn.MSELoss(), epochs=1100) #for now the validation and training datasets are the same
 
 if __name__ == "__main__":
   main()

@@ -8,37 +8,45 @@ class RunModel():
     Class that scafolds the training and evaluation methods and attributes
     for each test case (Test case: Adam, Test case: Lookahead(Adam)).
     """
-    def __init__(self, model, optimizer, args) -> None:
-        
-        if torch.cuda.is_available():
-            self.model = model.cuda()
-        else:
-            self.model = model
+    def __init__(self, model, adam_optim, batch_size, train_size) -> None:
+        #if torch.cuda.is_available():
+        #    self.model = model.cuda()
+        #else:
         self.model = model
         self.train_loss = []
         self.val_loss = []
-        self.train_acc = []
-        self.val_acc = []
-        self.optimizer = optimizer
+        #self.train_acc = []
+        #self.val_acc = []
+        self.adam_optim = adam_optim
+        self.batch_size = batch_size
+        self.train_size = train_size
+        self.d_model = 512
+        self.n_steps = 0
+        self.n_warmup_steps = 4000
+
+    def train(self, train_batch, train_boundaries, val_batch, val_boundaries, criterion=nn.MSELoss()):
         
-    def train(self, train, val, criterion=nn.MSELoss(), epochs=512):#TBDDDD
-        
-        
-        #scuffed and not done 
+        batches_per_epoch = round(self.train_size / self.batch_size)
+        self.adam_optim.zero_grad()
+        train_boundaries = torch.cat((np.zeros(1), train_boundaries))
+
         for epoch in range(epochs):  # loop over whole dataset
-            total_train_loss = 0.0
-            
-        
-            n_warmup_steps = 20
 
-            scheduler1 = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda = lambda epoch: 512 ** -0.5 * n_warmup_steps ** -1.5 * epoch)
-            scheduler2 = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda = lambda epoch: 512 ** -0.5 * (epoch + n_warmup_steps) ** -0.5)
+            for batch_num in range(batches_per_epoch):
 
-            scheduler = optim.lr_scheduler.SequentialLR(optimizer, schedulers = [scheduler1, scheduler2], milestones = [n_warmup_steps])
+                batch_start = round(train_boundaries.shape[0] * batch_num / batches_per_epoch)
+                batch_end = round(train_boundaries.shape[0] * (batch_num + 1) / batches_per_epoch)
+                out = self.model(train_batch[train_boundaries[batch_start]:train_boundaries[batch_end]], train_boundaries[batch_start:batch_end])
 
-            if torch.cuda.is_available():
-                train = train.cuda()
-                val = val.cuda()
+                self.n_steps += 1
+                lr = (self.d_model ** -0.5) * min(self.n_steps ** (-0.5), self.n_steps * self.n_warmup_steps ** (-1.5))
+                for param_group in self._optimizer.param_groups:
+                    param_group['lr'] = lr
+                adam_optim.step()
+
+            #if torch.cuda.is_available():
+            #    train = train.cuda()
+            #    val = val.cuda()
             
             
             for i in range(n_warmup_steps * 21):
