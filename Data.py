@@ -98,7 +98,7 @@ class Data():
                     "One Piece Swimsuits","Cover-up"]
                     specific_type_one_hot = nn.functional.one_hot(torch.as_tensor(self.category_ids.index(i["items"][j]["categoryid"])), specific_types.indexof(specific_type)).unsqueeze(0)
                     
-                    one_hot = torch.cat((formality_one_hot,formalities_one_hot, type_one_hot, specific_type_one_hot), dim=0)   
+                    one_hot = torch.cat((formality_one_hot,formalities_one_hot, type_one_hot, specific_type_one_hot), dim=1)   
                     
                     categories = torch.cat((categories, one_hot))
                 j += 1

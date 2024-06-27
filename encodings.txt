@@ -2,7 +2,7 @@
 First class is [1...] second class is [0,1....] etc
 Gender: Male, Female, Both/Unisex
 Formality: Casual, Formal
-Type: Top, Bottom
+Type: Top, Bottom,
 
 Specific Type: 
 Casual
