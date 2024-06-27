@@ -22,45 +22,54 @@ class RunModel():
         self.train_size = train_size
         self.d_model = 512
         self.n_steps = 0
-        self.n_warmup_steps = 4000
+        self.n_warmup_steps = 200
 
-    def train(self, train_batch, train_boundaries, val_batch, val_boundaries, criterion=nn.MSELoss()):
+    def train(self, train_data, val_data, criterion = nn.MSELoss(), epochs = 1100):
+
+        train_batch, train_boundaries, train_likes, train_views = train_data
+        val_batch, val_boundaries, val_likes, val_views = val_data
         
         batches_per_epoch = round(self.train_size / self.batch_size)
-        self.adam_optim.zero_grad()
-        train_boundaries = torch.cat((np.zeros(1), train_boundaries))
+        num_outfits = train_boundaries.shape[0]
+        train_boundaries = torch.cat((torch.zeros(1, dtype = torch.long), train_boundaries))
 
         for epoch in range(epochs):  # loop over whole dataset
 
             for batch_num in range(batches_per_epoch):
 
-                batch_start = round(train_boundaries.shape[0] * batch_num / batches_per_epoch)
-                batch_end = round(train_boundaries.shape[0] * (batch_num + 1) / batches_per_epoch)
-                out = self.model(train_batch[train_boundaries[batch_start]:train_boundaries[batch_end]], train_boundaries[batch_start:batch_end])
+                batch_start = round(num_outfits * batch_num / batches_per_epoch)
+                batch_end = round(num_outfits * (batch_num + 1) / batches_per_epoch)
 
+                batch_start_garments = train_boundaries[batch_start]
+                batch_end_garments = train_boundaries[batch_end]
+                garments = train_batch[batch_start_garments:batch_end_garments]
+                outfit_boundaries = train_boundaries[batch_start + 1:batch_end + 1].subtract(train_boundaries[batch_start])
+                out = self.model(garments, outfit_boundaries)
+                labels = torch.cat((train_likes[batch_start:batch_end].unsqueeze(1), train_views[batch_start:batch_end].unsqueeze(1)), dim = 1)
+                loss = criterion(out, labels)
+                self.train_loss.append(loss.item())
+                self.adam_optim.zero_grad()
+                loss.backward()
+                
                 self.n_steps += 1
                 lr = (self.d_model ** -0.5) * min(self.n_steps ** (-0.5), self.n_steps * self.n_warmup_steps ** (-1.5))
-                for param_group in self._optimizer.param_groups:
+                for param_group in self.adam_optim.param_groups:
                     param_group['lr'] = lr
-                adam_optim.step()
+                self.adam_optim.step()
 
             #if torch.cuda.is_available():
             #    train = train.cuda()
             #    val = val.cuda()
             
+            epoch_loss = 0
+            for i in range(len(self.train_loss) - batches_per_epoch, len(self.train_loss)):
+                epoch_loss += self.train_loss[i]
             
-            for i in range(n_warmup_steps * 21):
-                out = model(train)
-                loss = loss_fn(out, valid_labels)
-                #not sure the labels situation from original code
-                print(i)
-                print(loss)
-                print(scheduler.get_last_lr())
-                optimizer.zero_grad()
-                loss.backward()
-                # update weights
-                optimizer.step()
-                scheduler.step()
+            val_out = self.model(val_batch, val_boundaries)
+            val_labels = torch.cat((val_likes.unsqueeze(1), val_views.unsqueeze(1)), dim = 1)
+            val_loss = criterion(val_out, val_labels)
+            self.val_loss.append(val_loss.item())
+            print(str(epoch_loss) + " " + str(val_loss.item()))
             
     def test(self, test):
         pass
@@ -74,3 +83,7 @@ class RunModel():
     def get_train_acc(self):
         #train_acc = curr_acc = correct / total
         return self.train_acc    
+
+        """
+        8-bit integer (unsigned) torch.uint8 16-bit integer (unsigned) torch.uint16 (limited support) 4 32-bit integer (unsigned) torch.uint32 (limited support) 4 64-bit integer (unsigned) torch.uint64 (limited support) 4 8-bit integer (signed) torch.int8 16-bit integer (signed) torch.int16 or torch.short 32-bit integer (signed) torch.int32 or torch.int 64-bit integer (signed) torch.int64 or torch.long
+        """

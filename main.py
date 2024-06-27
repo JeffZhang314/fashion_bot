@@ -2,11 +2,10 @@ import torch.nn as nn
 import torchvision.models as models
 import torch
 import torch.optim as optim
-from transformer.Optim import ScheduledOptim
 
 from model import Fasho
-from runModel import TrainModel
-from data import Data
+from runModel import RunModel
+from Data import Data
 
 import os
 
@@ -65,9 +64,9 @@ def main():
 # Concatenate the padded tensors  
 
   
-  train_batch, train_outfit_boundaries, train_likes, train_views = torch.load(path + 'train.pt')
-  valid_batch, valid_outfit_boundaries, valid_likes, valid_views = torch.load(path + 'valid.pt')
-
+  train_data = torch.load(path + 'test.pt')
+  train_data = (train_data[0], train_data[1].long(), train_data[2], train_data[3])
+  valid_data = torch.load(path + 'valid.pt')
   
   
   
@@ -78,11 +77,12 @@ def main():
   #main model ResnetToTransformer Layer -> Transformer Layer -> TransformerToOutput Layer
   model = Fasho()
   adam_optim = optim.Adam(model.parameters(), betas = (0.9, 0.98), eps = 1e-09)
-  batch_size = 3800
-  train_size = 17316
+  batch_size = 190
+  train_size = 3076
 
-  run_model = runModel(Fasho, adam_optim, batch_size, train_size)
-  run_model.train(annotated_batch, annotated_batch, criterion=nn.MSELoss(), epochs=1100) #for now the validation and training datasets are the same
+  run_model = RunModel(model, adam_optim, batch_size, train_size)
+  run_model.train(train_data, valid_data, criterion=nn.MSELoss(), epochs=1100) #for now the validation and training datasets are the same
+  print("done")
 
 if __name__ == "__main__":
   main()

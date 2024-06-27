@@ -62,8 +62,6 @@ class Fasho(nn.Module): # connects resnet and transformer
 
   def forward(self, x, outfit_boundaries):
 
-    print("before resnet to transformer")
-
     #resnet to transformer layer
     out = self.lin0(x)
 
@@ -97,8 +95,6 @@ class Fasho(nn.Module): # connects resnet and transformer
 
     out += x
 
-    print("between resnet to transformer and transformer")
-
     out = out.tensor_split(outfit_boundaries[:-1])
 
     transformer_input = torch.empty(0, 9, 512)
@@ -116,8 +112,6 @@ class Fasho(nn.Module): # connects resnet and transformer
 
     #getting the output we want
     out = out.select(1, 0)
-
-    print("between transformer and transformer to output")
     
     #Transformer output
     out = self.lin5(out)
@@ -151,8 +145,6 @@ class Fasho(nn.Module): # connects resnet and transformer
     x = self.skip89(x)
 
     out += x
-
-    print("after transformer to output")
     
     return out
 
