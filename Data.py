@@ -62,8 +62,13 @@ class Data():
             self.cum_len += len(i["items"])
             self.outfit_boundaries = torch.cat((self.outfit_boundaries, torch.tensor([self.cum_len])))
 
+            garments_printed = 0
+
             j = 0
             while j < len(i["items"]):
+                if (garments_printed < 20):
+                    print(i["items"][j]["categoryid"])
+                    garments_printed += 1
                 if (i["items"][j]["categoryid"] in self.category_ids):
                     img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
                     if (img.mode != "RGB"):
@@ -105,13 +110,10 @@ class Data():
 
         print("before resnet")
         batch = self.resnet(batch).squeeze()
-        print("after resnet")
+        print("after resnet") 
         batch = torch.cat((batch, categories), 1)
 
+        for i in range(20):
+            print(batch[i][2048:])
+
         return batch
-
-
-    
-    
-
-
