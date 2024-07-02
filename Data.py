@@ -81,9 +81,9 @@ class Data():
             "288": {"gender": "Mens", "formality": "Casual", "type": "Bottom", "specific_type": "Activewear Shorts"},
             "289": {"gender": "Mens", "formality": "Casual", "type": "Top", "specific_type": "Activewear Jackets"},
             "309": {"gender": "Unisex", "formality": "Casual", "type": "Top", "specific_type": "Activewear Tank Tops"},
-            "310": {"gender": "Both", "formality": "Casual", "type": "Bottom", "specific_type": "Straight Leg Jeans"},
-            "332": {"gender": "Both", "formality": "Casual", "type": "Bottom", "specific_type": "Capri & Cropped Pants"},
-            "4516": {"gender": "Both", "formality": "Formal", "type": "Top", "specific_type": "Wedding Dresses"},
+            "310": {"gender": "Unisex", "formality": "Casual", "type": "Bottom", "specific_type": "Straight Leg Jeans"},
+            "332": {"gender": "Unisex", "formality": "Casual", "type": "Bottom", "specific_type": "Capri & Cropped Pants"},
+            "4516": {"gender": "Womens", "formality": "Formal", "type": "Top", "specific_type": "Wedding Dresses"},
             "1605": {"gender": "Womens", "formality": "Casual", "type": "Top", "specific_type": "Bikinis"},
             "1606": {"gender": "Womens", "formality": "Casual", "type": "Top", "specific_type": "One Piece Swimsuits"},
             "1607": {"gender": "Womens", "formality": "Casual", "type": "Top", "specific_type": "Cover-ups"}
@@ -101,8 +101,6 @@ class Data():
                     "Activewear Pants","Activewear Skirts","Activewear Shorts","Activewear Jackets","Sports Bras","Clothing","Shirts","Sweaters","T-Shirts","Outerwear","Sportcoats & Blazers","Jeans","Pants","Shorts","Suits",
                     "Swimwear","Underwear","Sleepwear","Activewear","Activewear Tops","Activewear Pants","Activewear Shorts","Activewear Jackets","Activewear Tank Tops","Straight Leg Jeans","Capri & Cropped Pants","Wedding Dresses","Bikinis",
                     "One Piece Swimsuits","Cover-ups"]
-        print("len specific types")
-        print(len(self.specific_types))
 
 
     def prep_data(self): # get resnet output and category id one-hot encoding of whole dataset
@@ -135,8 +133,6 @@ class Data():
 
         batch = torch.empty(0, 3, 224, 224)
         categories = torch.empty(0, len(self.genders) + len(self.formalities) + len(self.types) + len(self.specific_types))
-
-        garments_printed = 0
         
         for i in data:
             
@@ -150,6 +146,7 @@ class Data():
             j = 0
             while j < len(i["items"]):
                 if (str(i["items"][j]["categoryid"]) in self.clothing_dict):
+
                     img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
                     if (img.mode != "RGB"):
                         img = img.convert('RGB')
@@ -183,9 +180,5 @@ class Data():
         batch = self.resnet(batch).squeeze()
         print("after resnet") 
         batch = torch.cat((batch, categories), 1)
-
-        for i in range(20):
-            print("category id one hot encoding")
-            print(batch[i][2048:])
 
         return batch
