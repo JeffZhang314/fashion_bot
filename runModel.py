@@ -9,10 +9,10 @@ class RunModel():
     for each test case (Test case: Adam, Test case: Lookahead(Adam)).
     """
     def __init__(self, model, adam_optim, batch_size, train_size) -> None:
-        #if torch.cuda.is_available():
-        #    self.model = model.cuda()
-        #else:
-        self.model = model
+        if torch.cuda.is_available():
+           self.model = model.cuda()
+        else:
+            self.model = model
         self.train_loss = []
         self.val_loss = []
         #self.train_acc = []
@@ -29,6 +29,11 @@ class RunModel():
         train_batch, train_boundaries, train_likes, train_views = train_data
         val_batch, val_boundaries, val_likes, val_views = val_data
         
+        if torch.cuda.is_available():
+            train_batch, train_boundaries, train_likes, train_views = train_batch.cuda(), train_boundaries.cuda(), train_likes.cuda(), train_views.cuda()
+            val_batch, val_boundaries, val_likes, val_views = val_batch.cuda(), val_boundaries.cuda(), val_likes.cuda(), val_views.cuda()   
+            
+        
         batches_per_epoch = round(self.train_size / self.batch_size)
         num_outfits = train_boundaries.shape[0]
         train_boundaries = torch.cat((torch.zeros(1, dtype = torch.long), train_boundaries))
@@ -40,12 +45,19 @@ class RunModel():
                 batch_start = round(num_outfits * batch_num / batches_per_epoch)
                 batch_end = round(num_outfits * (batch_num + 1) / batches_per_epoch)
 
+                #prep data
                 batch_start_garments = train_boundaries[batch_start]
                 batch_end_garments = train_boundaries[batch_end]
                 garments = train_batch[batch_start_garments:batch_end_garments]
                 outfit_boundaries = train_boundaries[batch_start + 1:batch_end + 1].subtract(train_boundaries[batch_start])
-                out = self.model(garments, outfit_boundaries)
                 labels = torch.cat((train_likes[batch_start:batch_end].unsqueeze(1), train_views[batch_start:batch_end].unsqueeze(1)), dim = 1)
+                
+                #check if cuda is available 
+                if torch.cuda.is_available():
+                    garments, outfit_boundaries, labels = garments.cuda(), outfit_boundaries.cuda(), labels.cuda()
+                
+                #training
+                out = self.model(garments, outfit_boundaries)
                 loss = criterion(out, labels)
                 self.train_loss.append(loss.item())
                 self.adam_optim.zero_grad()
@@ -57,9 +69,6 @@ class RunModel():
                     param_group['lr'] = lr
                 self.adam_optim.step()
 
-            #if torch.cuda.is_available():
-            #    train = train.cuda()
-            #    val = val.cuda()
             
             epoch_loss = 0
             for i in range(len(self.train_loss) - batches_per_epoch, len(self.train_loss)):

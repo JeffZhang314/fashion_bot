@@ -107,6 +107,9 @@ class Fasho(nn.Module): # connects resnet and transformer
       transformer_input = torch.cat((transformer_input, nn.ZeroPad2d((0, 0, 0, 8 - i.shape[0]))(torch.cat((output_embedding, i))).unsqueeze(0)))
       mask = torch.cat((mask, torch.cat((torch.full((i.shape[0] + 1,), True), torch.full((8 - i.shape[0],), False))).unsqueeze(0)))
     
+    if torch.cuda.is_available():
+      transformer_input, mask = transformer_input.cuda(), mask.cuda()
+    
     #transformer layer
     out = self.transformer(transformer_input, src_key_padding_mask = mask)
 
