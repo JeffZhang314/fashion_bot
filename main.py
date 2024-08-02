@@ -24,7 +24,7 @@ def main():
 
   cum_len = 0
   torch.manual_seed(0)
-  batch_size = 128
+  batch_size = 512
   
   weights = models.ResNet152_Weights.IMAGENET1K_V2
   preprocess = weights.transforms()
@@ -36,7 +36,7 @@ def main():
   annotated_batch = myData.prep_data()
   #this runs through the resnet layer and prepares the data 
 
-  # #torch.save(annotated_batch, path + 'valid.pt')
+  #torch.save(annotated_batch, path + 'train.pt')
 
   # one_hot_gender = torch.eye(3)
   # one_hot_formality = torch.eye(2)

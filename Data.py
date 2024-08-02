@@ -1,10 +1,11 @@
 import torch.nn as nn
 import random
 from json import load
-from PIL import Image
+from PIL import Image, ImageTk
 import torch
 import torchvision.models as models
 import math
+import tkinter as tk
 
 
 class Data():
@@ -22,7 +23,7 @@ class Data():
         self.clothing_dict = {
             "2": {"gender": "Unisex", "formality": "Casual", "type": "Top", "specific_type": "Casual"},
             "4": {"gender": "Womens", "formality": "Casual", "type": "Top", "specific_type": "Day Dresses"},
-            "5": {"gender": "Womens", "formality": "Formal", "type": "Top", "specific_type": "Cocktail Dresses"},
+            "5": {"gender": "Womens", f"formality": "Formal", "type": "Top", "specific_type": "Cocktail Dresses"},
             "6": {"gender": "Womens", "formality": "Formal", "type": "Top", "specific_type": "Gowns"},
             "7": {"gender": "Womens", "formality": "Casual", "type": "Bottom", "specific_type": "Skirts"},
             "8": {"gender": "Womens", "formality": "Casual", "type": "Bottom", "specific_type": "Mini Skirts"},
@@ -112,7 +113,7 @@ class Data():
 
         batch = torch.tensor([])
 
-        f = open(self.path + "valid_no_dup.json",)
+        f = open(self.path + "train_no_dup.json",)
         data = load(f)
         f.close()
         random.Random(0).shuffle(data)
@@ -134,6 +135,43 @@ class Data():
         batch = torch.empty(0, 3, 224, 224)
         categories = torch.empty(0, len(self.genders) + len(self.formalities) + len(self.types) + len(self.specific_types))
         
+        print("before gui")
+
+        root = tk.Tk()
+        root.title("Garment Validation")
+        root.geometry("1500x800")
+
+        results = []
+
+        set_id = 0
+        index = 0
+
+        waitingForClick = True
+
+        def goodClick():
+            results.append([set_id, index, True])
+            nonlocal waitingForClick
+            waitingForClick = False
+            print(results)
+
+        goodButton = tk.Button(root, text = "Good", command = goodClick)
+        goodButton.pack()
+
+        def badClick():
+            results.append([set_id, index, False])
+            nonlocal waitingForClick
+            waitingForClick = False
+            print(results)
+            
+        badButton = tk.Button(root, text = "Bad", command = badClick)
+        badButton.pack()
+
+        image = tk.Label(root)
+        image.pack()
+
+        name = tk.Label(root)
+        name.pack()
+
         for i in data:
             
             folder = self.path + "images\\" + i["set_id"] + "\\"
@@ -143,16 +181,32 @@ class Data():
             self.cum_len += len(i["items"])
             self.outfit_boundaries = torch.cat((self.outfit_boundaries, torch.tensor([self.cum_len])))
 
+            #i["set_id"]
+            
             j = 0
             while j < len(i["items"]):
-                if (str(i["items"][j]["categoryid"]) in self.clothing_dict):
+                img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
+                if (img.mode != "RGB"):
+                    img = img.convert('RGB')
 
+                set_id = i["set_id"]
+                index = i["items"][j]["index"]
+                    
+                converted_img = ImageTk.PhotoImage(img)
+                image.config(image = converted_img)
+                name.config(text = str(i["set_id"]) + " " + str(i["items"][j]["index"]))
+                waitingForClick = True
+                while (waitingForClick):
+                    root.update()
+
+                #i["items"][j]["index"]
+
+                if (str(i["items"][j]["categoryid"]) in self.clothing_dict):
                     img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
                     if (img.mode != "RGB"):
                         img = img.convert('RGB')
                     batch = torch.cat((batch, self.preprocess(img).unsqueeze(0)))
                     img.close()
-                    
                     
                     #one_hot = nn.functional.one_hot(torch.as_tensor(self.category_ids.index(i["items"][j]["categoryid"])), 380).unsqueeze(0)
                     
