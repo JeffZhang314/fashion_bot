@@ -32,8 +32,8 @@ def main():
   resnet = models.resnet152(weights = weights)
   
   #data preparation
-  myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
-  annotated_batch = myData.prep_data()
+  #myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
+  #annotated_batch = myData.prep_data()
   #this runs through the resnet layer and prepares the data 
 
   #torch.save(annotated_batch, path + 'train.pt')
@@ -62,9 +62,9 @@ def main():
 # Concatenate the padded tensors  
 
   
-  train_data = torch.load(path + 'test.pt')
-  train_data = (train_data[0], train_data[1].long(), train_data[2], train_data[3])
-  valid_data = torch.load(path + 'valid.pt')
+  #train_data = torch.load(path + 'test.pt')
+  #train_data = (train_data[0], train_data[1].long(), train_data[2], train_data[3])
+  #valid_data = torch.load(path + 'valid.pt')
   
   
   
@@ -73,7 +73,13 @@ def main():
     
 
   #main model ResnetToTransformer Layer -> Transformer Layer -> TransformerToOutput Layer
+  
   model = Fasho()
+
+  torch.save(model, path + 'model.pt')
+
+  print("done")
+
   adam_optim = optim.Adam(model.parameters(), betas = (0.9, 0.98), eps = 1e-09)
   batch_size = 190
   train_size = 3076

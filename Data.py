@@ -23,7 +23,7 @@ class Data():
         self.clothing_dict = {
             "2": {"gender": "Unisex", "formality": "Casual", "type": "Top", "specific_type": "Casual"},
             "4": {"gender": "Womens", "formality": "Casual", "type": "Top", "specific_type": "Day Dresses"},
-            "5": {"gender": "Womens", f"formality": "Formal", "type": "Top", "specific_type": "Cocktail Dresses"},
+            "5": {"gender": "Womens", "formality": "Formal", "type": "Top", "specific_type": "Cocktail Dresses"},
             "6": {"gender": "Womens", "formality": "Formal", "type": "Top", "specific_type": "Gowns"},
             "7": {"gender": "Womens", "formality": "Casual", "type": "Bottom", "specific_type": "Skirts"},
             "8": {"gender": "Womens", "formality": "Casual", "type": "Bottom", "specific_type": "Mini Skirts"},
@@ -102,6 +102,13 @@ class Data():
                     "Activewear Pants","Activewear Skirts","Activewear Shorts","Activewear Jackets","Sports Bras","Clothing","Shirts","Sweaters","T-Shirts","Outerwear","Sportcoats & Blazers","Jeans","Pants","Shorts","Suits",
                     "Swimwear","Underwear","Sleepwear","Activewear","Activewear Tops","Activewear Pants","Activewear Shorts","Activewear Jackets","Activewear Tank Tops","Straight Leg Jeans","Capri & Cropped Pants","Wedding Dresses","Bikinis",
                     "One Piece Swimsuits","Cover-ups"]
+        self.set_id = 0
+        self.index = 0
+        self.image = 0
+        self.name = 0
+        self.root = 0
+        self.waitingForClick = 0
+        self.results = 0
 
 
     def prep_data(self): # get resnet output and category id one-hot encoding of whole dataset
@@ -120,10 +127,42 @@ class Data():
 
         print(len(data))
 
+        self.root = tk.Tk()
+        self.root.title("Garment Validation")
+        self.root.geometry("1500x800")
+        
+        self.results = []
+
+        self.waitingForClick = True
+
+        def goodClick():
+            self.results.append([self.set_id, self.index, True])
+            self.waitingForClick = False
+            print(self.results)
+
+        goodButton = tk.Button(self.root, text = "Good", command = goodClick)
+        goodButton.pack()
+
+        def badClick():
+            self.results.append([self.set_id, self.index, False])
+            self.waitingForClick = False
+            print(self.results)
+            
+        badButton = tk.Button(self.root, text = "Bad", command = badClick)
+        badButton.pack()
+
+        self.image = tk.Label(self.root)
+        self.image.pack()
+
+        self.name = tk.Label(self.root)
+        self.name.pack()
+
         for i in range(math.ceil(len(data)/self.batch_size)):
             print(i)
             inc_batch = self.prep_batch(data[self.batch_size * i:min(self.batch_size * (i + 1), len(data))])
             batch = torch.cat((batch, inc_batch))
+
+        print("prep_data done")
             
         return batch, self.outfit_boundaries, self.likes, self.views
 
@@ -134,43 +173,6 @@ class Data():
 
         batch = torch.empty(0, 3, 224, 224)
         categories = torch.empty(0, len(self.genders) + len(self.formalities) + len(self.types) + len(self.specific_types))
-        
-        print("before gui")
-
-        root = tk.Tk()
-        root.title("Garment Validation")
-        root.geometry("1500x800")
-
-        results = []
-
-        set_id = 0
-        index = 0
-
-        waitingForClick = True
-
-        def goodClick():
-            results.append([set_id, index, True])
-            nonlocal waitingForClick
-            waitingForClick = False
-            print(results)
-
-        goodButton = tk.Button(root, text = "Good", command = goodClick)
-        goodButton.pack()
-
-        def badClick():
-            results.append([set_id, index, False])
-            nonlocal waitingForClick
-            waitingForClick = False
-            print(results)
-            
-        badButton = tk.Button(root, text = "Bad", command = badClick)
-        badButton.pack()
-
-        image = tk.Label(root)
-        image.pack()
-
-        name = tk.Label(root)
-        name.pack()
 
         for i in data:
             
@@ -189,15 +191,16 @@ class Data():
                 if (img.mode != "RGB"):
                     img = img.convert('RGB')
 
-                set_id = i["set_id"]
-                index = i["items"][j]["index"]
-                    
-                converted_img = ImageTk.PhotoImage(img)
-                image.config(image = converted_img)
-                name.config(text = str(i["set_id"]) + " " + str(i["items"][j]["index"]))
-                waitingForClick = True
-                while (waitingForClick):
-                    root.update()
+                if ("polyvore" in i["items"][j]["name"]):
+                    self.set_id = i["set_id"]
+                    self.index = i["items"][j]["index"]
+
+                    converted_img = ImageTk.PhotoImage(img)
+                    self.image.config(image = converted_img)
+                    self.name.config(text = str(i["set_id"]) + " " + str(i["items"][j]["index"]))
+                    self.waitingForClick = True
+                    while (self.waitingForClick):
+                        self.root.update()
 
                 #i["items"][j]["index"]
 
@@ -231,8 +234,8 @@ class Data():
                 j += 1
 
         print("before resnet")
-        batch = self.resnet(batch).squeeze()
+        #batch = self.resnet(batch).squeeze()
         print("after resnet") 
-        batch = torch.cat((batch, categories), 1)
+        #batch = torch.cat((batch, categories), 1)
 
         return batch

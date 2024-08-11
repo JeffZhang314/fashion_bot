@@ -3,3 +3,4 @@ images/
 valid.pt
 test.pt
 train.pt
+model.pt
