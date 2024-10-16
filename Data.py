@@ -182,6 +182,7 @@ class Data():
 
             self.cum_len += len(i["items"])
             self.outfit_boundaries = torch.cat((self.outfit_boundaries, torch.tensor([self.cum_len])))
+            print(self.outfit_boundaries)
 
             #i["set_id"]
             
@@ -204,7 +205,7 @@ class Data():
 
                 #i["items"][j]["index"]
 
-                if (str(i["items"][j]["categoryid"]) in self.clothing_dict):
+                if (False and str(i["items"][j]["categoryid"]) in self.clothing_dict):
                     img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
                     if (img.mode != "RGB"):
                         img = img.convert('RGB')

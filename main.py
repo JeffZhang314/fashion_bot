@@ -32,8 +32,8 @@ def main():
   resnet = models.resnet152(weights = weights)
   
   #data preparation
-  #myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
-  #annotated_batch = myData.prep_data()
+  myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
+  annotated_batch = myData.prep_data()
   #this runs through the resnet layer and prepares the data 
 
   #torch.save(annotated_batch, path + 'train.pt')
