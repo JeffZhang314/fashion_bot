@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 
 
-class Fasho(nn.Module): # connects resnet and transformer
+class Fasho(nn.Module): # everything after resnet
   def __init__(self):
     super(Fasho, self).__init__()
 
@@ -94,29 +94,41 @@ class Fasho(nn.Module): # connects resnet and transformer
     x = self.skip34(x)
 
     out += x
-
+    
+    # transformer needs garments to be grouped by outfit
     out = out.tensor_split(outfit_boundaries[:-1])
 
+    # init transformer and mask
+    # transformer requires exactly 8 garments plus 1 dummy, even if outfit has fewer than 8 garments
+    # mask makes sure even if outfit has fewer than 8 garments, the extra garments are ignored
     transformer_input = torch.empty(0, 9, 512)
     mask = torch.empty(0, 9)
-  
+
+    # dummy garment
+    # transformer outputs something for each garment, but we want it to output something for whole outfit
+    # add a dummy garment (at the beginning of training, its initialized to something random; with training, it gets better)
     zeros = torch.zeros(1, dtype = torch.long)
     output_embedding = self.output_embedding_dict(zeros)
-    
+
+    # go through outfits
     for i in out:
+      # TODO separate into different lines
+      # concatenates dummy garment to rest of garments, pad with 0s, add that to other outfits
       transformer_input = torch.cat((transformer_input, nn.ZeroPad2d((0, 0, 0, 8 - i.shape[0]))(torch.cat((output_embedding, i))).unsqueeze(0)))
+      # see explanation of masks above and/or pytorch documentation for transformer masks
       mask = torch.cat((mask, torch.cat((torch.full((i.shape[0] + 1,), True), torch.full((8 - i.shape[0],), False))).unsqueeze(0)))
     
+    #cuda
     if torch.cuda.is_available():
       transformer_input, mask = transformer_input.cuda(), mask.cuda()
     
-    #transformer layer
+    # apply transformer
     out = self.transformer(transformer_input, src_key_padding_mask = mask)
 
-    #getting the output we want
+    # choose only dummy node
     out = out.select(1, 0)
     
-    #Transformer output
+    # final linear layers
     out = self.lin5(out)
 
     x = out
