@@ -1,13 +1,11 @@
 import torch.nn as nn
 import torch
 
-
-class Fasho(nn.Module): # everything after resnet
+class FeedForwardOne(nn.Module):
   def __init__(self):
-    super(Fasho, self).__init__()
+    super(FeedForwardOne, self).__init__()
 
-    self.output_embedding_dict = nn.Embedding(1, 512)
-    #Resnet to transformer layers
+    # resnet to transformer layers
     self.lin0 = nn.Linear(2428, 4096)
 
     self.relu1 = nn.ReLU(True)
@@ -31,11 +29,45 @@ class Fasho(nn.Module): # everything after resnet
     self.lin4 = nn.Linear(2048, 512)
 
     self.skip34 = nn.Linear(4096, 512)
-    
-    #Transformer encoder layer
-    self.transformer = nn.TransformerEncoder(nn.TransformerEncoderLayer(d_model = 512, nhead = 8, batch_first = True), num_layers = 6)
-    
-    #Transformer Output layers
+
+  def forward(self, x):
+    out = self.lin0(x)
+
+    x = out
+
+    out = self.relu1(out)
+    out = self.bn1(out)
+    out = self.dropout1(out)
+    out = self.lin1(out)
+
+    out = self.relu2(out)
+    out = self.bn2(out)
+    out = self.dropout2(out)
+    out = self.lin2(out)
+
+    out += x
+
+    out = self.relu3(out)
+    out = self.bn3(out)
+    out = self.dropout3(out)
+    out = self.lin3(out)
+
+    out = self.relu4(out)
+    out = self.bn4(out)
+    out = self.dropout4(out)
+    out = self.lin4(out)
+
+    x = self.skip34(x)
+
+    out += x
+
+    return out
+
+class FeedForwardTwo(nn.Module):
+  def __init__(self):
+    super(FeedForwardTwo, self).__init__()
+
+    # transformer to output layers
     self.lin5 = nn.Linear(512, 512)
 
     self.relu6 = nn.ReLU(True)
@@ -57,87 +89,19 @@ class Fasho(nn.Module): # everything after resnet
     self.bn9 = nn.BatchNorm1d(32)
     self.dropout9 = nn.Dropout(0.05)
     self.lin9 = nn.Linear(32, 2)
-
+    
     self.skip89 = nn.Linear(512, 2)
 
-  def forward(self, x, outfit_boundaries):
-
-    #resnet to transformer layer
-    out = self.lin0(x)
-
-    x = out
-
-    out = self.relu1(out)
-    out = self.bn1(out)
-    out = self.dropout1(out)
-    out = self.lin1(out)
-
-    out = self.relu2(out)
-    out = self.bn2(out)
-    out = self.dropout2(out)
-    out = self.lin2(out)
-
-    out += x
-
-    x = out
-
-    out = self.relu3(out)
-    out = self.bn3(out)
-    out = self.dropout3(out)
-    out = self.lin3(out)
-
-    out = self.relu4(out)
-    out = self.bn4(out)
-    out = self.dropout4(out)
-    out = self.lin4(out)
-
-    x = self.skip34(x)
-
-    out += x
+  def forward(self, x):
+    out = self.lin5(x)
     
-    # transformer needs garments to be grouped by outfit
-    out = out.tensor_split(outfit_boundaries[:-1])
-
-    # init transformer and mask
-    # transformer requires exactly 8 garments plus 1 dummy, even if outfit has fewer than 8 garments
-    # mask makes sure even if outfit has fewer than 8 garments, the extra garments are ignored
-    transformer_input = torch.empty(0, 9, 512)
-    mask = torch.empty(0, 9)
-
-    # dummy garment
-    # transformer outputs something for each garment, but we want it to output something for whole outfit
-    # add a dummy garment (at the beginning of training, its initialized to something random; with training, it gets better)
-    zeros = torch.zeros(1, dtype = torch.long)
-    output_embedding = self.output_embedding_dict(zeros)
-
-    # go through outfits
-    for i in out:
-      # TODO separate into different lines
-      # concatenates dummy garment to rest of garments, pad with 0s, add that to other outfits
-      transformer_input = torch.cat((transformer_input, nn.ZeroPad2d((0, 0, 0, 8 - i.shape[0]))(torch.cat((output_embedding, i))).unsqueeze(0)))
-      # see explanation of masks above and/or pytorch documentation for transformer masks
-      mask = torch.cat((mask, torch.cat((torch.full((i.shape[0] + 1,), True), torch.full((8 - i.shape[0],), False))).unsqueeze(0)))
-    
-    #cuda
-    if torch.cuda.is_available():
-      transformer_input, mask = transformer_input.cuda(), mask.cuda()
-    
-    # apply transformer
-    out = self.transformer(transformer_input, src_key_padding_mask = mask)
-
-    # choose only dummy node
-    out = out.select(1, 0)
-    
-    # final linear layers
-    out = self.lin5(out)
-
     x = out
 
     out = self.relu6(out)
     out = self.bn6(out)
     out = self.dropout6(out)
     out = self.lin6(out)
-
+    
     out = self.relu7(out)
     out = self.bn7(out)
     out = self.dropout7(out)
@@ -156,10 +120,81 @@ class Fasho(nn.Module): # everything after resnet
     out = self.bn9(out)
     out = self.dropout9(out)
     out = self.lin9(out)
-
+    
     x = self.skip89(x)
 
     out += x
+
+    return out
+
+class Transformer(nn.Module):
+  def __init__(self):
+    super(Transformer, self).__init__()
+
+    # transformer encoder layer
+    self.transformer = nn.TransformerEncoder(nn.TransformerEncoderLayer(d_model = 512, nhead = 8, batch_first = True), num_layers = 6)
+    self.output_embedding_dict = nn.Embedding(1, 512)
+    
+  def init_transformer_mask(self, x):
+    # transformer requires exactly 8 garments plus 1 dummy, even if outfit has fewer than 8 garments
+    # mask makes sure even if outfit has fewer than 8 garments, the extra garments are ignored
+    transformer_input = torch.empty(0, 9, 512)
+    mask = torch.empty(0, 9)
+
+    # dummy garment
+    # transformer outputs something for each garment, but we want it to output something for whole outfit
+    # add a dummy garment (at the beginning of training, its initialized to something random; with training, it gets better)
+    zeros = torch.zeros(1, dtype = torch.long)
+    output_embedding = self.output_embedding_dict(zeros)
+
+    # go through outfits
+    for i in x:
+      # concatenates dummy garment to rest of garments, pad with 0s, add that to other outfits 
+      # concatenate output_embedding and i
+      concatenated_input = torch.cat((output_embedding, i))
+      # apply padding using ZeroPad2d to the concatenated input
+      padded_input = nn.ZeroPad2d((0, 0, 0, 8 - i.shape[0]))(concatenated_input)
+      # unsqueeze the result and concatenate it with transformer_input
+      transformer_input = torch.cat((transformer_input, padded_input.unsqueeze(0)))
+
+      # see explanation of masks above and/or pytorch documentation for transformer masks
+      # create a tensor of True values with the size i.shape[0] + 1
+      true_values = torch.full((i.shape[0] + 1,), True)
+      # create a tensor of False values with the size 8 - i.shape[0]
+      false_values = torch.full((8 - i.shape[0],), False)
+      # concatenate the True and False tensors
+      concat_mask = torch.cat((true_values, false_values))
+      # unsqueeze the concatenated mask and concatenate it with the existing mask
+      mask = torch.cat((mask, concat_mask.unsqueeze(0)))
+    
+    # cuda
+    if torch.cuda.is_available():
+      transformer_input, mask = transformer_input.cuda(), mask.cuda()
+
+    return transformer_input, mask
+
+  def forward(self, x, mask):
+    out = self.transformer(x, src_key_padding_mask = mask)
+    # choose only dummy node
+    out = out.select(1, 0)
     
     return out
 
+class Fasho(nn.Module): # everything after resnet
+  def __init__(self):
+    super(Fasho, self).__init__()
+    self.feed_forward_one = FeedForwardOne()
+    self.feed_forward_two = FeedForwardTwo()
+    self.transformer = Transformer()
+
+  def forward(self, x, outfit_boundaries):
+    feed_forward_one_output = self.feed_forward_one.forward(x)
+    # transformer needs garments to be grouped by outfit
+    feed_forward_one_output = feed_forward_one_output.tensor_split(outfit_boundaries[:-1])
+
+    transformer_input, mask = self.transformer.init_transformer_mask(feed_forward_one_output)
+    transformer_output = self.transformer.forward(transformer_input, mask)
+
+    feed_forward_two_output = self.feed_forward_two.forward(transformer_output)
+
+    return feed_forward_two_output
