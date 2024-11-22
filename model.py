@@ -105,6 +105,11 @@ class Fasho(nn.Module): # everything after resnet
     mask = torch.empty(0, 9)
 
     # dummy garment
+    # dummy, shirt, shoes, pants
+    # ...layers....
+    #...more layers...
+    # dummyoutput, shirtoutput, shoesoutput, pantsoutput
+    #ignore everything except for dummy output
     # transformer outputs something for each garment, but we want it to output something for whole outfit
     # add a dummy garment (at the beginning of training, its initialized to something random; with training, it gets better)
     zeros = torch.zeros(1, dtype = torch.long)
