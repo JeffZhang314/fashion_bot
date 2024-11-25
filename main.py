@@ -43,53 +43,54 @@ def main():
   
   #data preparation
   myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
-  annotated_batch = myData.prep_data()
+  # Run tkinter
+  myData.run_tkinter()
   #this runs through the resnet layer and prepares the data 
+  annotated_batch = myData.prep_data()
 
   # save resnet vectors, outfit boundaries, likes and views
-  #torch.save(annotated_batch, path + 'train.pt')
+  torch.save(annotated_batch, path + 'train.pt')
 
-  # ["Unisex", "Womens", "Mens"]
-  # ["Casual", "Formal"]
-  # ["Top", "Bottom"]
-  # ["Casual","Day Dresses","Cocktail Dresses","Gowns","Skirts","Mini Skirts","Knee Length Skirts","Long Skirts","Tops","Tunics","Blouses","Cardigans","Sweaters","T-Shirts","Outerwear","Coats",
+  #["Unisex", "Womens", "Mens"]
+  #["Casual", "Formal"]
+  #["Top", "Bottom"]
+  #["Casual","Day Dresses","Cocktail Dresses","Gowns","Skirts","Mini Skirts","Knee Length Skirts","Long Skirts","Tops","Tunics","Blouses","Cardigans","Sweaters","T-Shirts","Outerwear","Coats",
   #   "Jackets","Vests","Jeans","Pants","Shorts","Suits","Swimwear","Activewear","Skinny Jeans","Bootcut Jeans","Wide Leg Jeans","Boyfriend Jeans","Leggings","Jumpsuits","Rompers","Camisoles","Chemises","Pajamas","Robes","Tights","Activewear Tops",
   #   "Activewear Pants","Activewear Skirts","Activewear Shorts","Activewear Jackets","Sports Bras","Clothing","Shirts","Sweaters","T-Shirts","Outerwear","Sportcoats & Blazers","Jeans","Pants","Shorts","Suits",
   #   "Swimwear","Underwear","Sleepwear","Activewear","Activewear Tops","Activewear Pants","Activewear Shorts","Activewear Jackets","Activewear Tank Tops","Straight Leg Jeans","Capri & Cropped Pants","Wedding Dresses","Bikinis",
   #   "One Piece Swimsuits","Cover-ups"]
 
-  # one_hot_gender = torch.eye(3)
-  # one_hot_formality = torch.eye(2)
-  # one_hot_type = torch.eye(2)
-  # one_hot_specific_type = torch.eye(54)
+  one_hot_gender = torch.eye(3)
+  one_hot_formality = torch.eye(2)
+  one_hot_type = torch.eye(2)
+  one_hot_specific_type = torch.eye(54)
 
-  # # Determine the maximum shape
-  # max_cols = max(one_hot_gender.shape[1], one_hot_formality.shape[1], one_hot_type.shape[1], one_hot_specific_type.shape[1])
-  # print(max_cols)
-  # # Pad tensors to match the maximum shape
-  # def pad_tensor(tensor, max_cols):
-  #     padded_tensor = torch.zeros((tensor.shape[0], max_cols))
-  #     padded_tensor[:tensor.shape[0], :tensor.shape[1]] = tensor
-  #     return padded_tensor
+  # Determine the maximum shape
+  max_cols = max(one_hot_gender.shape[1], one_hot_formality.shape[1], one_hot_type.shape[1], one_hot_specific_type.shape[1])
+  print(max_cols)
 
-  # padded_gender = pad_tensor(one_hot_gender, max_cols)
-  # padded_formality = pad_tensor(one_hot_formality, max_cols)
-  # padded_type = pad_tensor(one_hot_type, max_cols)
-  # padded_specific_type = pad_tensor(one_hot_specific_type, max_cols)
+  # Pad tensors to match the maximum shape
+  def pad_tensor(tensor, max_cols):
+    padded_tensor = torch.zeros((tensor.shape[0], max_cols))
+    padded_tensor[:tensor.shape[0], :tensor.shape[1]] = tensor
+    return padded_tensor
+
+  padded_gender = pad_tensor(one_hot_gender, max_cols)
+  padded_formality = pad_tensor(one_hot_formality, max_cols)
+  padded_type = pad_tensor(one_hot_type, max_cols)
+  padded_specific_type = pad_tensor(one_hot_specific_type, max_cols)
   
-  # one_hot = torch.cat((padded_formality, padded_gender, padded_type, padded_specific_type))
-
-# Concatenate the padded tensors  
+  # Concatenate the padded tensors  
+  one_hot = torch.cat((padded_formality, padded_gender, padded_type, padded_specific_type))
 
   # load resnet vectors, outfit_boundaries, labels
-  #train_data = torch.load(path + 'test.pt')
-  #train_data = (train_data[0], train_data[1].long(), train_data[2], train_data[3])
-  #valid_data = torch.load(path + 'valid.pt')
+  train_data = torch.load(path + 'test.pt')
+  train_data = (train_data[0], train_data[1].long(), train_data[2], train_data[3])
+  valid_data = torch.load(path + 'valid.pt')
   
-  
-  #cuda
-  #if torch.cuda.is_available():
-  #  loaded_outfit_boundaries = loaded_outfit_boundaries.cuda()
+  # cuda
+  if torch.cuda.is_available():
+    loaded_outfit_boundaries = loaded_outfit_boundaries.cuda()
     
   #main model ResnetToTransformer Layer -> Transformer Layer -> TransformerToOutput Layer
   

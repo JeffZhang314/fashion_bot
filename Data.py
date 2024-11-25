@@ -111,24 +111,12 @@ class Data():
         self.waitingForClick = 0
         self.results = 0
 
-
-    def prep_data(self): # get resnet output and category id one-hot encoding of whole dataset
-
-        # Freeze all the pre-trained layers of resnet
-        for param in self.resnet.parameters():
-            param.requires_grad = False
-        # remove last layer
-        self.resnet = nn.Sequential(*(list(self.resnet.children())[:-1]))
-
-        # initialize batch
-        batch = torch.tensor([])
-
+    def run_tkinter(self):
         # load and shuffle data
         f = open(self.path + "train_no_dup.json",)
         data = load(f)
         f.close()
         random.Random(0).shuffle(data)
-
         print(len(data))
 
         #tkinter setup
@@ -169,108 +157,129 @@ class Data():
 
         # prep each resnet batch
         for i in range(math.ceil(len(data)/self.batch_size)):
+            inc_data = data[self.batch_size * i:min(self.batch_size * (i + 1), len(data))]
             print(i)
-            inc_batch = self.prep_batch(data[self.batch_size * i:min(self.batch_size * (i + 1), len(data))])
-            batch = torch.cat((batch, inc_batch))
-
-        print("prep_data done")
-        
-        #will be saved in pt file
-        return batch, self.outfit_boundaries, self.likes, self.views
-
-    def prep_batch(self, data): # get resnet output and category id one-hot encoding of just data
-
-        #nonlocal category_ids, preprocess, resnet, cum_len, batch_size, likes, views, outfit_boundaries
+            #nonlocal category_ids, preprocess, resnet, cum_len, batch_size, likes, views, outfit_boundaries
         #should no longer need this
 
-        # initialize tensor of images and one hot vectors
-        batch = torch.empty(0, 3, 224, 224)
-        categories = torch.empty(0, len(self.genders) + len(self.formalities) + len(self.types) + len(self.specific_types))
+            # loop through outfits
+            for i in inc_data:
+                # path stuff
+                folder = self.path + "images\\" + i["set_id"] + "\\"
 
-        # loop through outfits
-        for i in data:
-            
-            # path stuff
-            folder = self.path + "images\\" + i["set_id"] + "\\"
-            # labels
-            self.likes = torch.cat((self.likes, torch.tensor([i["likes"]])))
-            self.views = torch.cat((self.views, torch.tensor([i["views"]])))
-
-            # how many imgs so far, append to outfit_boundaries
-            self.cum_len += len(i["items"])
-            self.outfit_boundaries = torch.cat((self.outfit_boundaries, torch.tensor([self.cum_len])))
-            print(self.outfit_boundaries)
-
-            # loop through garments
-            j = 0
-            while j < len(i["items"]):
-
-                # open image; convert to rgb if black and white or something
-                img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
-                if (img.mode != "RGB"):
-                    img = img.convert('RGB')
-                
-                #maybe if name of garment contains "polyvore", its a garbage img?
-                if ("polyvore" in i["items"][j]["name"]):
-                    # for valid and invalid clicking
-                    self.set_id = i["set_id"]
-                    self.index = i["items"][j]["index"]
-
-                    # tkinter stuff
-                    converted_img = ImageTk.PhotoImage(img)
-                    # show image and text
-                    self.image.config(image = converted_img)
-                    self.name.config(text = str(i["set_id"]) + " " + str(i["items"][j]["index"]))
-                    # wait for click
-                    self.waitingForClick = True
-                    while (self.waitingForClick):
-                        self.root.update()
-
-                #i["items"][j]["index"]
-
-                # THIS FALSE TOGGLES BETWEEN PREPROCESSING DATA OR TKINTER CHECK IF IMG VALID GUI
-                if (False and str(i["items"][j]["categoryid"]) in self.clothing_dict):
-                    # open img
+                # loop through garments
+                j = 0
+                while j < len(i["items"]):
+                    # open image; convert to rgb if black and white or something
                     img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
-                    # if grayscale, -> rgb
                     if (img.mode != "RGB"):
                         img = img.convert('RGB')
-                    
-                    #preprocess
-                    batch = torch.cat((batch, self.preprocess(img).unsqueeze(0)))
-                    img.close()
-                    
-                    #one_hot = nn.functional.one_hot(torch.as_tensor(self.category_ids.index(i["items"][j]["categoryid"])), 380).unsqueeze(0)
-                    
-                    # category id
-                    item_id = i["items"][j]["categoryid"]
-                    
-                    # get each attribute and turn into one hot
-                    gender = self.clothing_dict[str(item_id)]["gender"]
-                    gender_one_hot = nn.functional.one_hot(torch.as_tensor(self.genders.index(gender)), len(self.genders))
-                    
-                    formality = self.clothing_dict[str(item_id)]["formality"]
-                    
-                    formality_one_hot = nn.functional.one_hot(torch.as_tensor(self.formalities.index(formality)), len(self.formalities))
-                    
-                    type = self.clothing_dict[str(item_id)]["type"]
-                    type_one_hot = nn.functional.one_hot(torch.as_tensor(self.types.index(type)), len(self.types))
-                    
-                    specific_type = self.clothing_dict[str(item_id)]["specific_type"]
-                    specific_type_one_hot = nn.functional.one_hot(torch.as_tensor(self.specific_types.index(specific_type)), len(self.specific_types))
-                    
-                    #concatenate all of attributes
-                    one_hot = torch.cat((gender_one_hot, formality_one_hot, type_one_hot, specific_type_one_hot)).unsqueeze(0)
-                    
-                    #update tensor of all category ids
-                    categories = torch.cat((categories, one_hot))
-                #increment
-                j += 1
 
-        print("before resnet")
-        #batch = self.resnet(batch).squeeze()
-        print("after resnet") 
-        #batch = torch.cat((batch, categories), 1)
+                    #maybe if name of garment contains "polyvore", its a garbage img?
+                    if ("polyvore" in i["items"][j]["name"]):
+                        # for valid and invalid clicking
+                        self.set_id = i["set_id"]
+                        self.index = i["items"][j]["index"]
 
-        #return resnet vectors and category one hot
-        return batch
+                        # tkinter stuff
+                        converted_img = ImageTk.PhotoImage(img)
+                        # show image and text
+                        self.image.config(image = converted_img)
+                        self.name.config(text = str(i["set_id"]) + " " + str(i["items"][j]["index"]))
+                        # wait for click
+                        self.waitingForClick = True
+                        while (self.waitingForClick):
+                            self.root.update()
+                    j += 1
+
+        print("tkinter done")
+        
+        return
+
+    def prep_data(self):
+        # Freeze all the pre-trained layers of resnet
+        for param in self.resnet.parameters():
+            param.requires_grad = False
+        # remove last layer
+        self.resnet = nn.Sequential(*(list(self.resnet.children())[:-1]))
+
+        # initialize batch
+        batch = torch.tensor([])
+
+        # load and shuffle data
+        f = open(self.path + "train_no_dup.json",)
+        data = load(f)
+        f.close()
+        random.Random(0).shuffle(data)
+
+        print(len(data))
+
+        # prep each resnet batch
+        for i in range(math.ceil(len(data)/self.batch_size)):
+            inc_data = data[self.batch_size * i:min(self.batch_size * (i + 1), len(data))]
+            print(i)
+            #nonlocal category_ids, preprocess, resnet, cum_len, batch_size, likes, views, outfit_boundaries
+            #should no longer need this
+
+            # initialize tensor of images and one hot vectors
+            inc_batch = torch.empty(0, 3, 224, 224)
+            categories = torch.empty(0, len(self.genders) + len(self.formalities) + len(self.types) + len(self.specific_types))
+            # loop through outfits
+            for i in inc_data:
+                # path stuff
+                folder = self.path + "images\\" + i["set_id"] + "\\"
+
+                # labels
+                self.likes = torch.cat((self.likes, torch.tensor([i["likes"]])))
+                self.views = torch.cat((self.views, torch.tensor([i["views"]])))
+
+                # how many imgs so far, append to outfit_boundaries
+                self.cum_len += len(i["items"])
+                self.outfit_boundaries = torch.cat((self.outfit_boundaries, torch.tensor([self.cum_len])))
+                print(self.outfit_boundaries)
+
+                # loop through garments
+                j = 0
+                while j < len(i["items"]):
+                    if str(i["items"][j]["categoryid"]) in self.clothing_dict:
+                        # open img
+                        img = Image.open(folder + str(i["items"][j]["index"]) + ".jpg")
+                        # if grayscale, -> rgb
+                        if (img.mode != "RGB"):
+                            img = img.convert('RGB')
+
+                        #preprocess
+                        inc_batch = torch.cat((inc_batch, self.preprocess(img).unsqueeze(0)))
+                        img.close()
+
+                        #one_hot = nn.functional.one_hot(torch.as_tensor(self.category_ids.index(i["items"][j]["categoryid"])), 380).unsqueeze(0)
+
+                        # category id
+                        item_id = i["items"][j]["categoryid"]
+
+                        # get each attribute and turn into one hot
+                        gender = self.clothing_dict[str(item_id)]["gender"]
+                        gender_one_hot = nn.functional.one_hot(torch.as_tensor(self.genders.index(gender)), len(self.genders))
+
+                        formality = self.clothing_dict[str(item_id)]["formality"]
+
+                        formality_one_hot = nn.functional.one_hot(torch.as_tensor(self.formalities.index(formality)), len(self.formalities))
+
+                        type = self.clothing_dict[str(item_id)]["type"]
+                        type_one_hot = nn.functional.one_hot(torch.as_tensor(self.types.index(type)), len(self.types))
+
+                        specific_type = self.clothing_dict[str(item_id)]["specific_type"]
+                        specific_type_one_hot = nn.functional.one_hot(torch.as_tensor(self.specific_types.index(specific_type)), len(self.specific_types))
+
+                        #concatenate all of attributes
+                        one_hot = torch.cat((gender_one_hot, formality_one_hot, type_one_hot, specific_type_one_hot)).unsqueeze(0)
+
+                        #update tensor of all category ids
+                        categories = torch.cat((categories, one_hot))
+                    #increment
+                    j += 1
+            batch = torch.cat((batch, inc_batch))
+        print("prep_data done")
+
+        #will be saved in pt file
+        return batch, self.outfit_boundaries, self.likes, self.views
