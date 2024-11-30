@@ -43,9 +43,11 @@ def main():
   
   #data preparation
   myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
+  
   # Run tkinter
-  myData.run_tkinter()
-  #this runs through the resnet layer and prepares the data 
+  #myData.run_tkinter()
+
+  # This runs through the resnet layer and prepares the data 
   annotated_batch = myData.prep_data()
 
   # save resnet vectors, outfit boundaries, likes and views

@@ -7,7 +7,6 @@ import torchvision.models as models
 import math
 import tkinter as tk
 
-
 class Data():
     
     def __init__(self, path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries):
@@ -156,11 +155,11 @@ class Data():
         self.name.pack()
 
         # prep each resnet batch
-        for i in range(math.ceil(len(data)/self.batch_size)):
-            inc_data = data[self.batch_size * i:min(self.batch_size * (i + 1), len(data))]
-            print(i)
+        for batch_iter in range(math.ceil(len(data)/self.batch_size)):
+            inc_data = data[self.batch_size * batch_iter:min(self.batch_size * (batch_iter + 1), len(data))]
+            print(batch_iter)
             #nonlocal category_ids, preprocess, resnet, cum_len, batch_size, likes, views, outfit_boundaries
-        #should no longer need this
+            #should no longer need this
 
             # loop through outfits
             for i in inc_data:
@@ -192,7 +191,7 @@ class Data():
                             self.root.update()
                     j += 1
 
-        print("tkinter done")
+        print("run_tkinter done")
         
         return
 
@@ -215,9 +214,9 @@ class Data():
         print(len(data))
 
         # prep each resnet batch
-        for i in range(math.ceil(len(data)/self.batch_size)):
-            inc_data = data[self.batch_size * i:min(self.batch_size * (i + 1), len(data))]
-            print(i)
+        for batch_iter in range(math.ceil(len(data)/self.batch_size)):
+            inc_data = data[self.batch_size * batch_iter:min(self.batch_size * (batch_iter + 1), len(data))]
+            print(batch_iter)
             #nonlocal category_ids, preprocess, resnet, cum_len, batch_size, likes, views, outfit_boundaries
             #should no longer need this
 
@@ -278,8 +277,14 @@ class Data():
                         categories = torch.cat((categories, one_hot))
                     #increment
                     j += 1
+            
+            print("Before resnet")
+            inc_batch = self.resnet(inc_batch).squeeze()
+            print("After resnet")
+            inc_batch = torch.cat((inc_batch, categories), 1)
+            
             batch = torch.cat((batch, inc_batch))
+        
         print("prep_data done")
-
         #will be saved in pt file
         return batch, self.outfit_boundaries, self.likes, self.views
