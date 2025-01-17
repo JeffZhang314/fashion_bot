@@ -235,7 +235,7 @@ class Data():
                 # how many imgs so far, append to outfit_boundaries
                 self.cum_len += len(i["items"])
                 self.outfit_boundaries = torch.cat((self.outfit_boundaries, torch.tensor([self.cum_len])))
-                print(self.outfit_boundaries)
+                #print(self.outfit_boundaries)
 
                 # loop through garments
                 j = 0
