@@ -112,7 +112,7 @@ class Data():
 
     def run_tkinter(self):
         # load and shuffle data
-        f = open(self.path + "train_no_dup.json",)
+        f = open(self.path + "valid_no_dup.json",)
         data = load(f)
         f.close()
         random.Random(0).shuffle(data)
@@ -206,7 +206,7 @@ class Data():
         batch = torch.tensor([])
 
         # load and shuffle data
-        f = open(self.path + "train_no_dup.json",)
+        f = open(self.path + "valid_no_dup.json",)
         data = load(f)
         f.close()
         random.Random(0).shuffle(data)

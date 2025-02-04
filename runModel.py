@@ -26,7 +26,7 @@ class RunModel():
         self.n_steps = 0
         self.n_warmup_steps = 200
 
-    def train(self, train_data, val_data, criterion = nn.MSELoss(), epochs = 1100):
+    def train(self, train_data, val_data, criterion = nn.MSELoss(), epochs = 1100, path = ""):
 
         # get data from pt file
         train_batch, train_boundaries, train_likes, train_views = train_data
@@ -111,7 +111,10 @@ class RunModel():
 
             # add this epoch's loss to list of losses
             self.val_loss.append(val_loss.item())
-            print(str(epoch_loss) + " " + str(val_loss.item()))
+            print(str(epoch) + " " + str(epoch_loss) + " " + str(val_loss.item()))
+            print("saving " + str(epoch))
+            torch.save(torch.tensor([torch.tensor(self.train_loss), torch.tensor(self.val_loss)]), path + 'losses.pt')
+            print("saved " + str(epoch))
     
     # convenient methods that we didnt use yet
     def test(self, test):

@@ -42,16 +42,16 @@ def main():
   resnet = models.resnet152(weights = weights)
   
   #data preparation
-  myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
+  #myData = Data(path, category_ids, resnet, preprocess, cum_len, batch_size, likes, views, outfit_boundaries)
   
   # Run tkinter
   #myData.run_tkinter()
 
   # This runs through the resnet layer and prepares the data 
-  annotated_batch = myData.prep_data()
+  #annotated_batch = myData.prep_data()
 
   # save resnet vectors, outfit boundaries, likes and views
-  torch.save(annotated_batch, path + 'train.pt')
+  #torch.save(annotated_batch, path + 'valid.pt')
 
   #["Unisex", "Womens", "Mens"]
   #["Casual", "Formal"]
@@ -101,7 +101,7 @@ def main():
   #save model
   torch.save(model, path + 'model.pt')
 
-  print("done")
+  print("done resnet")
 
   # initialize adam_optim, batch size for training, training set size
   adam_optim = optim.Adam(model.parameters(), betas = (0.9, 0.98), eps = 1e-09)
@@ -110,8 +110,8 @@ def main():
 
   # run model
   run_model = RunModel(model, adam_optim, batch_size, train_size)
-  run_model.train(train_data, valid_data, criterion=nn.MSELoss(), epochs=1100) #for now the validation and training datasets are the same
-  print("done")
+  run_model.train(train_data, valid_data, criterion=nn.MSELoss(), epochs=1100, path=path)
+  print("done training")
 
 if __name__ == "__main__":
   main()
