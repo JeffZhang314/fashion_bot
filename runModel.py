@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 import torch.optim as optim
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class RunModel():
@@ -45,6 +46,9 @@ class RunModel():
         num_outfits = train_boundaries.shape[0]
         #for tensor split
         train_boundaries = torch.cat((torch.zeros(1, dtype = torch.long), train_boundaries))
+
+        # initialize epoch loss list
+        epoch_loss_list = []
 
         for epoch in range(epochs):  # go through dataset multiple times
 
@@ -102,7 +106,8 @@ class RunModel():
             epoch_loss = 0
             for i in range(len(self.train_loss) - batches_per_epoch, len(self.train_loss)):
                 epoch_loss += self.train_loss[i]
-            
+            epoch_loss_list.append(epoch_loss)
+
             # run model on validation set
             val_out = self.model(val_batch, val_boundaries)
 
@@ -112,11 +117,30 @@ class RunModel():
 
             # add this epoch's loss to list of losses
             self.val_loss.append(val_loss.item())
-            print(str(epoch) + " " + str(epoch_loss) + " " + str(val_loss.item()))
+            print("Epoch " + str(epoch) + ": " + "Epoch Loss: " +str(epoch_loss) + " Val Loss: " + str(val_loss.item()))
             print("saving " + str(epoch))
             torch.save((self.train_loss, self.val_loss), path + 'losses.pt')
             print("saved " + str(epoch))
-    
+
+        # plot epoch loss
+        plt.figure()
+        plt.plot(epoch_loss_list)
+        epoch_loss_title = "Epoch Loss"
+        plt.title(epoch_loss_title)
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+
+        # plot val loss
+        plt.figure()
+        plt.plot(self.val_loss)
+        val_loss_title = "Val Loss"
+        plt.title(val_loss_title)
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+
+        # show all plots
+        plt.show()
+
     # convenient methods that we didnt use yet
     def test(self, test):
         pass

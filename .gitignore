@@ -5,3 +5,4 @@ test.pt
 train.pt
 model.pt
 losses.pt
+venv/
