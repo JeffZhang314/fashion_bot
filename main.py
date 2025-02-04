@@ -104,7 +104,7 @@ def main():
   print("done resnet")
 
   losses = torch.load(path + 'losses.pt')
-  print(losses)
+  #print(losses)
 
   # initialize adam_optim, batch size for training, training set size
   adam_optim = optim.Adam(model.parameters(), betas = (0.9, 0.98), eps = 1e-09)

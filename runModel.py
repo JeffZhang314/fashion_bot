@@ -117,29 +117,30 @@ class RunModel():
 
             # add this epoch's loss to list of losses
             self.val_loss.append(val_loss.item())
-            print("Epoch " + str(epoch) + ": " + "Epoch Loss: " +str(epoch_loss) + " Val Loss: " + str(val_loss.item()))
+            print("Epoch " + str(epoch) + ": " + "Epoch Loss: " + str(epoch_loss) + " Val Loss: " + str(val_loss.item()))
             print("saving " + str(epoch))
             torch.save((self.train_loss, self.val_loss), path + 'losses.pt')
             print("saved " + str(epoch))
 
-        # plot epoch loss
-        plt.figure()
-        plt.plot(epoch_loss_list)
-        epoch_loss_title = "Epoch Loss"
-        plt.title(epoch_loss_title)
-        plt.xlabel("Epochs")
-        plt.ylabel("Loss")
+            if (epoch % 20 == 0):
+                # plot epoch loss
+                plt.figure()
+                plt.plot(epoch_loss_list)
+                epoch_loss_title = "Epoch Loss"
+                plt.title(epoch_loss_title)
+                plt.xlabel("Epochs")
+                plt.ylabel("Loss")
 
-        # plot val loss
-        plt.figure()
-        plt.plot(self.val_loss)
-        val_loss_title = "Val Loss"
-        plt.title(val_loss_title)
-        plt.xlabel("Epochs")
-        plt.ylabel("Loss")
+                # plot val loss
+                plt.figure()
+                plt.plot(self.val_loss)
+                val_loss_title = "Val Loss"
+                plt.title(val_loss_title)
+                plt.xlabel("Epochs")
+                plt.ylabel("Loss")
 
-        # show all plots
-        plt.show()
+                # show all plots
+                plt.show()
 
     # convenient methods that we didnt use yet
     def test(self, test):
