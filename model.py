@@ -6,7 +6,7 @@ class FeedForwardOne(nn.Module):
     super(FeedForwardOne, self).__init__()
 
     # resnet to transformer layers
-    self.lin0 = nn.Linear(2428, 4096)
+    self.lin0 = nn.Linear(2122, 4096)
 
     self.relu1 = nn.ReLU(True)
     self.bn1 = nn.BatchNorm1d(4096)

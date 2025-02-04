@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch
 import torch.optim as optim
+import numpy as np
 
 
 class RunModel():
@@ -113,7 +114,7 @@ class RunModel():
             self.val_loss.append(val_loss.item())
             print(str(epoch) + " " + str(epoch_loss) + " " + str(val_loss.item()))
             print("saving " + str(epoch))
-            torch.save(torch.tensor([torch.tensor(self.train_loss), torch.tensor(self.val_loss)]), path + 'losses.pt')
+            torch.save((self.train_loss, self.val_loss), path + 'losses.pt')
             print("saved " + str(epoch))
     
     # convenient methods that we didnt use yet

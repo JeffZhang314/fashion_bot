@@ -65,7 +65,7 @@ def main():
   one_hot_gender = torch.eye(3)
   one_hot_formality = torch.eye(2)
   one_hot_type = torch.eye(2)
-  one_hot_specific_type = torch.eye(54)
+  one_hot_specific_type = torch.eye(67)
 
   # Determine the maximum shape
   max_cols = max(one_hot_gender.shape[1], one_hot_formality.shape[1], one_hot_type.shape[1], one_hot_specific_type.shape[1])
@@ -102,6 +102,9 @@ def main():
   torch.save(model, path + 'model.pt')
 
   print("done resnet")
+
+  losses = torch.load(path + 'losses.pt')
+  print(losses)
 
   # initialize adam_optim, batch size for training, training set size
   adam_optim = optim.Adam(model.parameters(), betas = (0.9, 0.98), eps = 1e-09)

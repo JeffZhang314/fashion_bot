@@ -223,6 +223,10 @@ class Data():
             # initialize tensor of images and one hot vectors
             inc_batch = torch.empty(0, 3, 224, 224)
             categories = torch.empty(0, len(self.genders) + len(self.formalities) + len(self.types) + len(self.specific_types))
+            print("data.py 226 " + str(len(self.genders)))
+            print(str(len(self.formalities)))
+            print(str(len(self.types)))
+            print(str(len(self.specific_types)))
             # loop through outfits
             for i in inc_data:
                 # path stuff
