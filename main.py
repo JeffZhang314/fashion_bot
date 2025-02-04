@@ -98,9 +98,6 @@ def main():
   
   model = Fasho()
 
-  #save model
-  torch.save(model, path + 'model.pt')
-
   print("done resnet")
 
   losses = torch.load(path + 'losses.pt')

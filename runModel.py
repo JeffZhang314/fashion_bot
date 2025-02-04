@@ -123,6 +123,10 @@ class RunModel():
             print("saved " + str(epoch))
 
             if (epoch % 20 == 0):
+
+                #save model
+                torch.save(self.model, path + 'model.pt')
+
                 # plot epoch loss
                 plt.figure()
                 plt.plot(epoch_loss_list)
